@@ -2,14 +2,24 @@ import Head from 'next/head';
 import Image from 'next/image';
 import axios from 'axios';
 
+import FeaturedList from '../components/FeaturedList';
+
+interface FeaturedData {
+  page: number;
+  results: [];
+}
+
 type HomeProps = {
-  popularMovies: {
-    page: number;
-    results: [];
-  };
+  nowPlayingMovies: FeaturedData;
+  popularMovies: FeaturedData;
+  upcomingMovies: FeaturedData;
 };
 
-const Home = ({ popularMovies }: HomeProps) => {
+const Home = ({
+  nowPlayingMovies,
+  popularMovies,
+  upcomingMovies,
+}: HomeProps) => {
   return (
     <div>
       <Head>
@@ -24,27 +34,9 @@ const Home = ({ popularMovies }: HomeProps) => {
       </header>
 
       <main>
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 30,
-            justifyContent: 'center',
-          }}
-        >
-          {popularMovies.results.map((movie: any) => (
-            <div key={movie.id} style={{ textAlign: 'center', width: 200 }}>
-              <Image
-                src={`https://image.tmdb.org/t/p/original${movie.poster_path}`}
-                alt={movie.title}
-                width={200}
-                height={300}
-                unoptimized
-              />
-              <h3>{movie.title}</h3>
-            </div>
-          ))}
-        </div>
+        <FeaturedList title="Now Playing" data={nowPlayingMovies} />
+        <FeaturedList title="Popular" data={popularMovies} />
+        <FeaturedList title="Upcoming" data={upcomingMovies} />
       </main>
 
       <footer>
@@ -64,6 +56,17 @@ const Home = ({ popularMovies }: HomeProps) => {
 };
 
 export const getStaticProps = async () => {
+  const nowPlayingMovies = await axios.get(
+    'https://api.themoviedb.org/3/movie/now_playing',
+    {
+      params: {
+        api_key: '6012ba1a3fd45515269a0855af81a2cc',
+        language: 'en_US',
+        page: 1,
+      },
+    }
+  );
+
   const popularMovies = await axios.get(
     'https://api.themoviedb.org/3/movie/popular',
     {
@@ -75,11 +78,22 @@ export const getStaticProps = async () => {
     }
   );
 
-  console.log(popularMovies);
+  const upcomingMovies = await axios.get(
+    'https://api.themoviedb.org/3/movie/upcoming',
+    {
+      params: {
+        api_key: '6012ba1a3fd45515269a0855af81a2cc',
+        language: 'en_US',
+        page: 1,
+      },
+    }
+  );
 
   return {
     props: {
+      nowPlayingMovies: nowPlayingMovies.data,
       popularMovies: popularMovies.data,
+      upcomingMovies: upcomingMovies.data,
     },
   };
 };
